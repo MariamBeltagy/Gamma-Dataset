@@ -6,6 +6,8 @@ Created on Mon Aug 12 16:21:38 2019
 """
 
 # Import Used Libraries.
+
+from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 import numpy as np
 from sklearn.feature_selection import SelectKBest
