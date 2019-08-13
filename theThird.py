@@ -6,6 +6,17 @@ Created on Mon Aug 12 16:21:38 2019
 """
 
 # Import Used Libraries.
+import pandas as pd
+import numpy as np
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
+from sklearn.ensemble import ExtraTreesClassifier
+import matplotlib.pyplot as plt
+import seaborn as sns
+##Feature Selection
+
+
+
 import csv
 import random
 import pandas as pd
@@ -14,6 +25,7 @@ from openpyxl.utils import dataframe
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 import seaborn as sns
+from math import sqrt
 import matplotlib.pyplot as plt
 import math
 from matplotlib import colors as cs
@@ -40,8 +52,55 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 
+
+
+
+
+data = pd.read_csv("train.csv")
+
+
+
+
+
+
+
+
+
 magic = pd.read_csv("magic.data", sep=',')  # Reads a magic csv file.
 magic.classHG = pd.get_dummies(magic['classHG'], drop_first=True)  # class H=1  G=0
+
+xx = magic.iloc[:,0:10]  #independent columns
+yy = magic.iloc[:,-1]    #target column
+
+
+
+#apply SelectKBest class to extract  features
+bestfeatures = SelectKBest(score_func=chi2, k=2)
+fit = bestfeatures.fit(xx,yy)
+dfscores = pd.DataFrame(fit.scores_)
+dfcolumns = pd.DataFrame(xx.columns)
+#concat two dataframes for better visualization 
+featureScores = pd.concat([dfcolumns,dfscores],axis=1)
+featureScores.columns = ['h','g']  #naming the dataframe columns
+print(featureScores.nlargest(2,'Score'))  #print 2  features
+
+
+##Feature importance gives you a score for each feature of your data, the higher the score more important or relevant is the feature towards your output variable.
+
+model = ExtraTreesClassifier()
+model.fit(xx,yy)
+print(model.feature_importances_) #use inbuilt class feature_importances of tree based classifiers
+#plot graph of feature importances for better visualization
+feat_importances = pd.Series(model.feature_importances_, index=X.columns)
+feat_importances.nlargest(2).plot(kind='barh')
+plt.show()
+
+
+
+
+
+
+
 
 # balancing the data
 
@@ -128,3 +187,32 @@ def LR():
     logmodel = LogisticRegression()
     logmodel.fit(x_train, y_train)
     print_stats(logmodel)
+##Similarity Matrix 
+    def euclideanDistance(x1, x2):
+        suma = 0
+        for i in range(len(x1)):
+            suma += pow(x1[i] - x2[i], 2)
+        return sqrt(suma)
+     
+    def buildSimilarityMatrix():
+        numOfSamples = len(magic_under)
+        matrix = np.zeros(shape=(numOfSamples, numOfSamples))
+        for i in range(len(matrix)):
+            for j in range(len(matrix)):
+                dist = euclideanDistance(magic_under[i], magic_under[j])
+                if dist > numOfSamples: ##->raw input
+                    matrix[i,j] = 1
+        return matrix
+     
+    mat = buildSimilarityMatrix()
+
+
+
+
+
+
+
+
+
+
+
