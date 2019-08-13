@@ -56,7 +56,7 @@ from sklearn.feature_selection import chi2
 
 
 
-data = pd.read_csv("train.csv")
+#data = pd.read_csv("train.csv")
 
 
 
