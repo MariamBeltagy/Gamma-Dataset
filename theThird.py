@@ -52,12 +52,46 @@ from sklearn.feature_selection import chi2
 
 magic = pd.read_csv("magic.data", sep=',')  # Reads a magic csv file.
 magic.classHG = pd.get_dummies(magic['classHG'], drop_first=True)  # class H=1  G=0
+########################
 
+x = magic.drop("classHG", axis=1)
+y = magic["classHG"]
+
+# Visualization
+plt.title('line plot')  # line plot
+plt.plot(x, y)
+plt.show()
+
+magic.hist()  # histogram
+
+plt.matshow(magic.corr())  # correlation matrix
+plt.title('correlation matrix')
+plt.show()
+
+magic.boxplot(grid=False)
+plt.show()
+
+
+#######################
+
+# dataset resampling
+classHG_count = magic.classHG.value_counts()
+count_class_G, count_class_H = magic.classHG.value_counts()
+# Divide by class
+G_class = magic[magic['classHG'] == 0]
+H_class = magic[magic['classHG'] == 1]
+G_class_under = G_class.sample(count_class_H)
+magic_under = pd.concat([G_class_under, H_class], axis=0)
+x_under = magic_under.drop("classHG", axis=1)
+y_under = magic_under["classHG"]
+#magic_under.hist()
+#plt.show()
+
+#####################
 # normlization of data (1,0)
 scaler = MinMaxScaler()
-scaler.fit(magic)
-magic_norm = scaler.transform(magic)
-#print(magic_norm)
+scaler.fit(magic_under)
+magic_norm = scaler.transform(magic_under)
 np.savetxt("foo.csv", magic_norm, delimiter=",")
 magic_norm = pd.read_csv("foo.csv", sep=',')
 xx =magic_norm.iloc[:,0:10]  #independent columns
@@ -78,41 +112,21 @@ featureScores = pd.concat([dfcolumns,dfscores],axis=1)
 featureScores.columns = ['Specs','Score']  #naming the dataframe columns
 print(featureScores.nlargest(10,'Score'))
 
-##0123456789 H/G
-##10 11 12 13 14
-# 0123456789H/G
-x = magic.drop("classHG", axis=1)
-y = magic["classHG"]
-
-# Visualization
-plt.title('line plot')  # line plot
-plt.plot(x, y)
+##############
+model = ExtraTreesClassifier()
+model.fit(xx,yy)
+print(model.feature_importances_) #use inbuilt class feature_importances of tree based classifiers
+#plot graph of feature importances for better visualization
+feat_importances = pd.Series(model.feature_importances_, index=xx.columns)
+feat_importances.nlargest(10).plot(kind='barh')
 plt.show()
+#################
 
-magic.hist()  # histogram
-
-plt.matshow(magic.corr())  # correlation matrix
-plt.title('correlation matrix')
-plt.show()
-
-magic.boxplot(grid=False)
-plt.show()
-
-# dataset resampling
-classHG_count = magic.classHG.value_counts()
-count_class_G, count_class_H = magic.classHG.value_counts()
-# Divide by class
-G_class = magic[magic['classHG'] == 0]
-H_class = magic[magic['classHG'] == 1]
-G_class_under = G_class.sample(count_class_H)
-magic_under = pd.concat([G_class_under, H_class], axis=0)
-x_under = magic_under.drop("classHG", axis=1)
-y_under = magic_under["classHG"]
-magic_under.hist()
-plt.show()
+x_under = magic_under.drop(["classHG","D","E","F","G","H","J"], axis=1)
 
 # split data into training and testing
 x_train, x_test, y_train, y_test = train_test_split(x_under, y_under, test_size=0.3, random_state=1)
+#############################
 
 
 def print_stats(estimator):
