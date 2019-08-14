@@ -147,22 +147,3 @@ def LR():
     logmodel = LogisticRegression()
     logmodel.fit(x_train, y_train)
     print_stats(logmodel)
-
-    ##Similarity Matrix
-def euclideanDistance(x1, x2):
-        suma = 0
-        for i in range(len(x1)):
-            suma += pow(x1[i] - x2[i], 2)
-        return sqrt(suma)
-
-def buildSimilarityMatrix():
-        numOfSamples = len(magic)
-        matrix = np.zeros(shape=(numOfSamples, numOfSamples))
-        for i in range(len(matrix)):
-            for j in range(len(matrix)):
-                dist = euclideanDistance(magic[i], magic[j])
-                if dist > numOfSamples:  ##->raw input
-                    matrix[i, j] = 1
-        return matrix
-
-mat=buildSimilarityMatrix()
