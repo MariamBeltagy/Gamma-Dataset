@@ -49,40 +49,27 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 
-
-
-
 magic = pd.read_csv("magic.data", sep=',')  # Reads a magic csv file.
 magic.classHG = pd.get_dummies(magic['classHG'], drop_first=True)  # class H=1  G=0
 
+#normlization of data (1,0)
 scaler = MinMaxScaler()
 scaler.fit(magic)
-scaler.transform(magic)
-xx = magic.iloc[:, 0:10]  # independent columns
-print(xx)
-yy = magic.iloc[:, -1]  # target column
-
-
+magic_norm = scaler.transform(magic)
+xx = np.delete(magic_norm, 11)# independent columns
+yy = magic_norm[:,[10]]  # target column
 
 ##Feature importance gives you a score for each feature of your data, the higher the score more important or relevant is the feature towards your output variable.
-
-model = ExtraTreesClassifier()
-model.fit(xx, yy)
-#print(model.feature_importances_)  # use inbuilt class feature_importances of tree based classifiers
-# plot graph of feature importances for better visualization
-feat_importances = pd.Series(model.feature_importances_, index=xx.columns)
-feat_importances.nlargest(2).plot(kind='barh')
-#plt.show()
 # apply SelectKBest class to extract  features
-bestfeatures = SelectKBest(score_func=chi2, k=2)
-fit = bestfeatures.fit(xx, yy)
+"""bestfeatures = SelectKBest(score_func=chi2, k=2)
+fit = bestfeatures(xx, yy)
 dfscores = pd.DataFrame(fit.scores_)
 dfcolumns = pd.DataFrame(xx.columns)
 # concat two dataframes for better visualization
 featureScores = pd.concat([dfcolumns, dfscores], axis=1)
 featureScores.columns = ['h', 'g']  # naming the dataframe columns
-print(featureScores.nlargest(2, 'Score'))  # print 2  features
-# balancing the data
+print(featureScores.nlargest(2, 'Score'))  # print 2  features"""
+
 
 x = magic.drop("classHG", axis=1)
 y = magic["classHG"]
@@ -117,11 +104,6 @@ plt.show()
 # split data into training and testing
 x_train, x_test, y_train, y_test = train_test_split(x_under, y_under, test_size=0.3, random_state=1)
 
-
-# feature selection
-# hshoofha delw2ty
-
-
 def print_stats(estimator):
     y_pred_train = estimator.predict(x_train)
     y_pred_test = estimator.predict(x_test)
@@ -142,9 +124,7 @@ def print_stats(estimator):
 
 
 # KNN
-num_jobs = 9
-
-
+num_jobs = 10
 def kNearestNeighborsFunction(start_n, end_n):
     parameters = {'n_neighbors': list(range(start_n, end_n))}
     KNNC = KNeighborsClassifier(n_jobs=num_jobs)
@@ -169,20 +149,20 @@ def LR():
     print_stats(logmodel)
 
     ##Similarity Matrix
-    def euclideanDistance(x1, x2):
+def euclideanDistance(x1, x2):
         suma = 0
         for i in range(len(x1)):
             suma += pow(x1[i] - x2[i], 2)
         return sqrt(suma)
 
-    def buildSimilarityMatrix():
-        numOfSamples = len(magic_under)
+def buildSimilarityMatrix():
+        numOfSamples = len(magic)
         matrix = np.zeros(shape=(numOfSamples, numOfSamples))
         for i in range(len(matrix)):
             for j in range(len(matrix)):
-                dist = euclideanDistance(magic_under[i], magic_under[j])
+                dist = euclideanDistance(magic[i], magic[j])
                 if dist > numOfSamples:  ##->raw input
                     matrix[i, j] = 1
         return matrix
 
-    mat = buildSimilarityMatrix()
+mat=buildSimilarityMatrix()
