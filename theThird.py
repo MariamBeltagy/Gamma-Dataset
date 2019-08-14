@@ -18,6 +18,7 @@ import csv
 import random
 import pandas as pd
 import numpy as np
+
 from openpyxl.utils import dataframe
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -52,25 +53,34 @@ from sklearn.feature_selection import chi2
 magic = pd.read_csv("magic.data", sep=',')  # Reads a magic csv file.
 magic.classHG = pd.get_dummies(magic['classHG'], drop_first=True)  # class H=1  G=0
 
-#normlization of data (1,0)
+# normlization of data (1,0)
 scaler = MinMaxScaler()
 scaler.fit(magic)
 magic_norm = scaler.transform(magic)
-xx = np.delete(magic_norm, 11)# independent columns
-yy = magic_norm[:,[10]]  # target column
+#print(magic_norm)
+np.savetxt("foo.csv", magic_norm, delimiter=",")
+magic_norm = pd.read_csv("foo.csv", sep=',')
+xx =magic_norm.iloc[:,0:10]  #independent columns
+xx.columns = [
+  'A','B','C','D','E','F','G','H','I','J'
+]
+xx
+yy = magic_norm.iloc[:,-1]    #target column
 
 ##Feature importance gives you a score for each feature of your data, the higher the score more important or relevant is the feature towards your output variable.
 # apply SelectKBest class to extract  features
-"""bestfeatures = SelectKBest(score_func=chi2, k=2)
-fit = bestfeatures(xx, yy)
+bestfeatures = SelectKBest(score_func=chi2, k=2)
+fit = bestfeatures.fit(xx,yy)
 dfscores = pd.DataFrame(fit.scores_)
 dfcolumns = pd.DataFrame(xx.columns)
-# concat two dataframes for better visualization
-featureScores = pd.concat([dfcolumns, dfscores], axis=1)
-featureScores.columns = ['h', 'g']  # naming the dataframe columns
-print(featureScores.nlargest(2, 'Score'))  # print 2  features"""
+#concat two dataframes for better visualization
+featureScores = pd.concat([dfcolumns,dfscores],axis=1)
+featureScores.columns = ['Specs','Score']  #naming the dataframe columns
+print(featureScores.nlargest(10,'Score'))
 
-
+##0123456789 H/G
+##10 11 12 13 14
+# 0123456789H/G
 x = magic.drop("classHG", axis=1)
 y = magic["classHG"]
 
@@ -104,6 +114,7 @@ plt.show()
 # split data into training and testing
 x_train, x_test, y_train, y_test = train_test_split(x_under, y_under, test_size=0.3, random_state=1)
 
+
 def print_stats(estimator):
     y_pred_train = estimator.predict(x_train)
     y_pred_test = estimator.predict(x_test)
@@ -125,6 +136,8 @@ def print_stats(estimator):
 
 # KNN
 num_jobs = 10
+
+
 def kNearestNeighborsFunction(start_n, end_n):
     parameters = {'n_neighbors': list(range(start_n, end_n))}
     KNNC = KNeighborsClassifier(n_jobs=num_jobs)
