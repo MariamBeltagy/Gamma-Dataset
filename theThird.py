@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
-from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.ensemble import ExtraTreesClassifier, AdaBoostRegressor
 import matplotlib.pyplot as plt
 import seaborn as sns
 import csv
@@ -49,12 +49,11 @@ from sklearn.metrics import make_scorer, precision_score, recall_score, confusio
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
-
+from sklearn.model_selection import GridSearchCV
 
 
 magic = pd.read_csv("magic.data", sep=',')  # Reads a magic csv file.
 magic.classHG = pd.get_dummies(magic['classHG'], drop_first=True)  # class H=1  G=0
-########################
 
 x = magic.drop("classHG", axis=1)
 y = magic["classHG"]
@@ -62,25 +61,35 @@ y = magic["classHG"]
 # Visualization
 plt.title('line plot')  # line plot
 plt.plot(x, y)
+""""we can able to more clearly see the rate of change (slope)
+ between individual data points. If the independent variable was nominal,
+  you would almost certainly use a bar graph instead of a line graph."
+"""
 plt.savefig('lineplot.png')
 plt.show()
-
+#######################################
 magic.hist()  # histogram
 plt.savefig('histogram.png')
-
+"""we realize that in the histogram of classHG the number of samples in class G is
+much larger than class H (we will undersampe that later), also we can predict from the histogram of
+the other features which one would be the best"""
+########################################
 plt.matshow(magic.corr())  # correlation matrix
+""" the observable pattern is that all the variables highly correlated
+ with each other the linear regression’s estimates will be unreliable"""
 plt.title('correlation matrix')
 plt.savefig('correlationMatrix.png')
 plt.show()
-
-
-magic.boxplot(grid=False)
+########################################
+magic.boxplot(grid=False) # box plot
 plt.savefig('boxplot.png')
+"""we can see that the distribution of values of some features is very small and 
+large for other this will effect the features that will be used in classification  
+"""
 plt.show()
+########################################
 
-#######################
-
-# dataset resampling
+# dataset undersampling
 classHG_count = magic.classHG.value_counts()
 count_class_G, count_class_H = magic.classHG.value_counts()
 # Divide by class
@@ -91,7 +100,7 @@ magic_under = pd.concat([G_class_under, H_class], axis=0)
 x_under = magic_under.drop("classHG", axis=1)
 y_under = magic_under["classHG"]
 magic_under.hist()
-# plt.show()
+plt.show()
 
 #####################
 # normlization of data (1,0)
@@ -158,36 +167,34 @@ def print_stats(estimator):
 
 
 # KNN
-num_jobs = 10
-def kNearestNeighborsFunction(start_n, end_n):
-    parameters = {'n_neighbors': list(range(start_n, end_n))}
-    KNNC = KNeighborsClassifier(n_jobs=num_jobs)
-    gKnn = GridSearchCV(KNNC, parameters, scoring='f1_macro', cv=5, n_jobs=num_jobs)
-    gKnn.fit(x_train, y_train)
-    print('Best N found at ', gKnn.best_params_)
-    print('Best Mean F-Score ', gKnn.best_score_)
-    ns = gKnn.cv_results_['param_n_neighbors']
-    ns_score = gKnn.cv_results_['mean_test_score']
-    plt.title('Mean F-Score with different neighbors')
-    plt.plot(ns, ns_score)
-    plt.xlabel('# of neighbours')
-    plt.ylabel('Validation Mean F-Score')
-    plt.savefig('Mean F-Score with different neighbors.png')
-    plt.show()
-    print_stats(gKnn)
+def kNearestNeighborsFunction():
+    neighbors = list(range(1, 30, 2))
+    # empty list that will hold cv scores
+    cv_scores = []
+    # perform 10-fold cross validation
+    for k in neighbors:
+        knn = KNeighborsClassifier(n_neighbors=k)
+        scores = cross_val_score(knn, x_train, y_train, cv=10, scoring='accuracy')
+        cv_scores.append(scores.mean())
+
+    mse = [1 - x for x in cv_scores]
+    optimal_k = neighbors[mse.index(min(mse))]
+    n=optimal_k
+    print('Best N found at ' , n)
+    knn = KNeighborsClassifier(n_neighbors=n)
+    knn.fit(x_train , y_train)
+    print_stats(knn)
 
 
 # logistic regression
 def LR():
-    l1_LR = LogisticRegression(penalty='l1', tol=0.01, solver='saga')
-    l2_LR = LogisticRegression(penalty='l2', tol=0.01, solver='saga')
-    en_LR = LogisticRegression(penalty='elasticnet', solver='saga', l1_ratio=0.5, tol=0.01)
-    l1_LR = l1_LR.fit(x_train, y_train)
-    l2_LR = l2_LR.fit(x_train, y_train)
-    en_LR = en_LR.fit(x_train, y_train)
-    print_stats(l1_LR)
-    print_stats(l2_LR)
-    print_stats(en_LR)
+    grid = {"C": np.logspace(-3, 3, 7), "penalty": ["l1", "l2"]}  # l1 lasso l2 ridge
+    logreg = LogisticRegression()
+    logreg_cv = GridSearchCV(logreg, grid, cv=10)
+    logreg_cv.fit(x_train, y_train)
+    print("tuned hpyerparameters :(best parameters) ", logreg_cv.best_params_)
+    print_stats(logreg_cv)
+    print("accuracy :", logreg_cv.best_score_)
 
 
 # naive bayes
@@ -206,10 +213,17 @@ def DT():
     print_stats(ct_gini)
 
 #AdaBoost
-def AB(n):
-    ab = AdaBoostClassifier(n_estimators=n, random_state=0)
-    ab = ab.fit(x_train, y_train)
-    print_stats(ab)
+def AB():
+    param_grid = {
+        'learning_rate': [.1, .2, .3, .4, .5],
 
-kNearestNeighborsFunction(1,3)
-AB(100)
+        'n_estimators': [50, 100, 150, 200, 250]
+    }
+
+    classifier = AdaBoostClassifier()
+    grid_Search = GridSearchCV(classifier, param_grid=param_grid)
+    kk = grid_Search.fit(x_train, y_train)
+    print_stats(kk)
+
+
+AB()
