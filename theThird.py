@@ -18,10 +18,11 @@ import csv
 import random
 import pandas as pd
 import numpy as np
-
 from openpyxl.utils import dataframe
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+
 import seaborn as sns
 from math import sqrt
 import matplotlib.pyplot as plt
@@ -35,7 +36,6 @@ from sklearn import preprocessing
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import SelectKBest
 from sklearn import tree
-# import graphviz
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import f1_score
 from sklearn.neighbors import KNeighborsClassifier
@@ -110,12 +110,12 @@ dfcolumns = pd.DataFrame(xx.columns)
 #concat two dataframes for better visualization
 featureScores = pd.concat([dfcolumns,dfscores],axis=1)
 featureScores.columns = ['Specs','Score']  #naming the dataframe columns
-print(featureScores.nlargest(10,'Score'))
+#print(featureScores.nlargest(10,'Score'))
 
 ##############
 model = ExtraTreesClassifier()
 model.fit(xx,yy)
-print(model.feature_importances_) #use inbuilt class feature_importances of tree based classifiers
+#print(model.feature_importances_) #use inbuilt class feature_importances of tree based classifiers
 #plot graph of feature importances for better visualization
 feat_importances = pd.Series(model.feature_importances_, index=xx.columns)
 feat_importances.nlargest(10).plot(kind='barh')
@@ -139,19 +139,17 @@ def print_stats(estimator):
     print('Train Mean F-Score for both classes : ', f1_score(y_train, y_pred_train, average='macro'))
     print('Train Confusion Matrix : ', confusion_matrix(y_train, y_pred_train))
     print('----------------------------------------------------------------------')
-    print('Test Set Accuracy : ', accuracy_score(y_test, y_pred_test))
+    """print('Test Set Accuracy : ', accuracy_score(y_test, y_pred_test))
     print('Test Set Precision : ', precision_score(y_test, y_pred_test))
     print('Test Set Recall : ', recall_score(y_test, y_pred_test))
     print('Test F-Score for each class : ', f1_score(y_test, y_pred_test, average=None))
     print('Test Mean F-Score for both classes : ', f1_score(y_test, y_pred_test, average='macro'))
     print('Test Confusion Matrix : ', confusion_matrix(y_test, y_pred_test))
-    print('----------------------------------------------------------------------')
+    print('----------------------------------------------------------------------')"""
 
 
 # KNN
 num_jobs = 10
-
-
 def kNearestNeighborsFunction(start_n, end_n):
     parameters = {'n_neighbors': list(range(start_n, end_n))}
     KNNC = KNeighborsClassifier(n_jobs=num_jobs)
@@ -171,6 +169,20 @@ def kNearestNeighborsFunction(start_n, end_n):
 
 # logistic regression
 def LR():
-    logmodel = LogisticRegression()
-    logmodel.fit(x_train, y_train)
-    print_stats(logmodel)
+    l1_LR = LogisticRegression(penalty='l1', tol=0.01, solver='saga')
+    l2_LR = LogisticRegression(penalty='l2', tol=0.01, solver='saga')
+    en_LR = LogisticRegression(penalty='elasticnet', solver='saga',l1_ratio=0.5, tol=0.01)
+    l1_LR.fit(x_train, y_train)
+    l2_LR.fit(x_train, y_train)
+    en_LR.fit(x_train, y_train)
+    print_stats(l1_LR)
+    print_stats(l2_LR)
+    print_stats(en_LR)
+
+    #naive bayes
+def NB():
+       nb = GaussianNB()
+       nb.fit(x_train, y_train)
+       print_stats(nb)
+NB()
+LR()
