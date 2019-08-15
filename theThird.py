@@ -50,8 +50,6 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 
-from tunning_hyperparameters import logistic_tunning
-from tunning_hyperparameters import logistic_tunning
 
 
 magic = pd.read_csv("magic.data", sep=',')  # Reads a magic csv file.
@@ -92,7 +90,7 @@ G_class_under = G_class.sample(count_class_H)
 magic_under = pd.concat([G_class_under, H_class], axis=0)
 x_under = magic_under.drop("classHG", axis=1)
 y_under = magic_under["classHG"]
- magic_under.hist()
+magic_under.hist()
 # plt.show()
 
 #####################
