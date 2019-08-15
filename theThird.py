@@ -50,6 +50,10 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 
+from tunning_hyperparameters import logistic_tunning
+from tunning_hyperparameters import logistic_tunning
+
+
 magic = pd.read_csv("magic.data", sep=',')  # Reads a magic csv file.
 magic.classHG = pd.get_dummies(magic['classHG'], drop_first=True)  # class H=1  G=0
 ########################
@@ -60,15 +64,20 @@ y = magic["classHG"]
 # Visualization
 plt.title('line plot')  # line plot
 plt.plot(x, y)
+plt.savefig('lineplot.png')
 plt.show()
 
 magic.hist()  # histogram
+plt.savefig('histogram.png')
 
 plt.matshow(magic.corr())  # correlation matrix
 plt.title('correlation matrix')
+plt.savefig('correlationMatrix.png')
 plt.show()
 
+
 magic.boxplot(grid=False)
+plt.savefig('boxplot.png')
 plt.show()
 
 #######################
@@ -83,7 +92,7 @@ G_class_under = G_class.sample(count_class_H)
 magic_under = pd.concat([G_class_under, H_class], axis=0)
 x_under = magic_under.drop("classHG", axis=1)
 y_under = magic_under["classHG"]
-# magic_under.hist()
+ magic_under.hist()
 # plt.show()
 
 #####################
@@ -118,6 +127,7 @@ model.fit(xx, yy)
 # plot graph of feature importances for better visualization
 feat_importances = pd.Series(model.feature_importances_, index=xx.columns)
 feat_importances.nlargest(10).plot(kind='barh')
+plt.savefig('bestfeatures.png')
 plt.show()
 #################
 
@@ -164,6 +174,7 @@ def kNearestNeighborsFunction(start_n, end_n):
     plt.plot(ns, ns_score)
     plt.xlabel('# of neighbours')
     plt.ylabel('Validation Mean F-Score')
+    plt.savefig('Mean F-Score with different neighbors.png')
     plt.show()
     print_stats(gKnn)
 
