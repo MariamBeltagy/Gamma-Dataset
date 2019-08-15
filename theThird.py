@@ -32,7 +32,7 @@ from scipy.misc import imshow
 from scipy.stats import pearsonr
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import scale
-from sklearn import preprocessing
+from sklearn import preprocessing, metrics
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import SelectKBest
 from sklearn import tree
@@ -71,7 +71,6 @@ plt.show()
 magic.boxplot(grid=False)
 plt.show()
 
-
 #######################
 
 # dataset resampling
@@ -84,8 +83,8 @@ G_class_under = G_class.sample(count_class_H)
 magic_under = pd.concat([G_class_under, H_class], axis=0)
 x_under = magic_under.drop("classHG", axis=1)
 y_under = magic_under["classHG"]
-#magic_under.hist()
-#plt.show()
+# magic_under.hist()
+# plt.show()
 
 #####################
 # normlization of data (1,0)
@@ -94,38 +93,40 @@ scaler.fit(magic_under)
 magic_norm = scaler.transform(magic_under)
 np.savetxt("foo.csv", magic_norm, delimiter=",")
 magic_norm = pd.read_csv("foo.csv", sep=',')
-xx =magic_norm.iloc[:,0:10]  #independent columns
+xx = magic_norm.iloc[:, 0:10]  # independent columns
 xx.columns = [
-  'A','B','C','D','E','F','G','H','I','J'
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'
 ]
 xx
-yy = magic_norm.iloc[:,-1]    #target column
+yy = magic_norm.iloc[:, -1]  # target column
 
 ##Feature importance gives you a score for each feature of your data, the higher the score more important or relevant is the feature towards your output variable.
 # apply SelectKBest class to extract  features
 bestfeatures = SelectKBest(score_func=chi2, k=2)
-fit = bestfeatures.fit(xx,yy)
+fit = bestfeatures.fit(xx, yy)
 dfscores = pd.DataFrame(fit.scores_)
 dfcolumns = pd.DataFrame(xx.columns)
-#concat two dataframes for better visualization
-featureScores = pd.concat([dfcolumns,dfscores],axis=1)
-featureScores.columns = ['Specs','Score']  #naming the dataframe columns
-#print(featureScores.nlargest(10,'Score'))
+# concat two dataframes for better visualization
+featureScores = pd.concat([dfcolumns, dfscores], axis=1)
+featureScores.columns = ['Specs', 'Score']  # naming the dataframe columns
+# print(featureScores.nlargest(10,'Score'))
 
 ##############
 model = ExtraTreesClassifier()
-model.fit(xx,yy)
-#print(model.feature_importances_) #use inbuilt class feature_importances of tree based classifiers
-#plot graph of feature importances for better visualization
+model.fit(xx, yy)
+# print(model.feature_importances_) #use inbuilt class feature_importances of tree based classifiers
+# plot graph of feature importances for better visualization
 feat_importances = pd.Series(model.feature_importances_, index=xx.columns)
 feat_importances.nlargest(10).plot(kind='barh')
 plt.show()
 #################
 
-x_under = magic_under.drop(["classHG","D","E","F","G","H","J"], axis=1)
+x_under = magic_under.drop(["classHG", "D", "E", "F", "G", "H", "J"], axis=1)
 
 # split data into training and testing
 x_train, x_test, y_train, y_test = train_test_split(x_under, y_under, test_size=0.3, random_state=1)
+
+
 #############################
 
 
@@ -150,6 +151,8 @@ def print_stats(estimator):
 
 # KNN
 num_jobs = 10
+
+
 def kNearestNeighborsFunction(start_n, end_n):
     parameters = {'n_neighbors': list(range(start_n, end_n))}
     KNNC = KNeighborsClassifier(n_jobs=num_jobs)
@@ -171,18 +174,43 @@ def kNearestNeighborsFunction(start_n, end_n):
 def LR():
     l1_LR = LogisticRegression(penalty='l1', tol=0.01, solver='saga')
     l2_LR = LogisticRegression(penalty='l2', tol=0.01, solver='saga')
-    en_LR = LogisticRegression(penalty='elasticnet', solver='saga',l1_ratio=0.5, tol=0.01)
-    l1_LR.fit(x_train, y_train)
-    l2_LR.fit(x_train, y_train)
-    en_LR.fit(x_train, y_train)
-    print_stats(l1_LR)
-    print_stats(l2_LR)
-    print_stats(en_LR)
+    en_LR = LogisticRegression(penalty='elasticnet', solver='saga', l1_ratio=0.5, tol=0.01)
+    l1_LR = l1_LR.fit(x_train, y_train)
+    l2_LR = l2_LR.fit(x_train, y_train)
+    en_LR = en_LR.fit(x_train, y_train)
+    y_pred = l1_LR.predict(x_test)
+    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+    y_pred = l2_LR.predict(x_test)
+    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+    y_pred = en_LR.predict(x_test)
+    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+    #print_stats(l1_LR)
+    #print_stats(l2_LR)
+    #print_stats(en_LR)
 
-    #naive bayes
+
+# naive bayes
 def NB():
-       nb = GaussianNB()
-       nb.fit(x_train, y_train)
-       print_stats(nb)
-NB()
+    nb = GaussianNB()
+    nb = nb.fit(x_train, y_train)
+    y_pred = nb.predict(x_test)
+    print('_____________________________________')
+    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+    #print_stats(nb)
+
+#Decision Tree
+def DT():
+    ct_gini = DecisionTreeClassifier()
+    ct_entropy = DecisionTreeClassifier(criterion="entropy")
+    ct_gini = ct_gini.fit(x_train, y_train)
+    ct_entropy = ct_entropy.fit(x_train, y_train)
+    y_pred = ct_gini.predict(x_test)
+    print('_____________________________________')
+    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+    y_pred = ct_entropy.predict(x_test)
+    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+    #print_stats(ct_entropy)
+    #print_stats(ct_gini)
 LR()
+NB()
+DT()
