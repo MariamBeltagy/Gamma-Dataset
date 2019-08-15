@@ -140,19 +140,17 @@ def print_stats(estimator):
     print('Train Mean F-Score for both classes : ', f1_score(y_train, y_pred_train, average='macro'))
     print('Train Confusion Matrix : ', confusion_matrix(y_train, y_pred_train))
     print('----------------------------------------------------------------------')
-    """print('Test Set Accuracy : ', accuracy_score(y_test, y_pred_test))
+    print('Test Set Accuracy : ', accuracy_score(y_test, y_pred_test))
     print('Test Set Precision : ', precision_score(y_test, y_pred_test))
     print('Test Set Recall : ', recall_score(y_test, y_pred_test))
     print('Test F-Score for each class : ', f1_score(y_test, y_pred_test, average=None))
     print('Test Mean F-Score for both classes : ', f1_score(y_test, y_pred_test, average='macro'))
     print('Test Confusion Matrix : ', confusion_matrix(y_test, y_pred_test))
-    print('----------------------------------------------------------------------')"""
+    print('----------------------------------------------------------------------')
 
 
 # KNN
 num_jobs = 10
-
-
 def kNearestNeighborsFunction(start_n, end_n):
     parameters = {'n_neighbors': list(range(start_n, end_n))}
     KNNC = KNeighborsClassifier(n_jobs=num_jobs)
@@ -178,25 +176,16 @@ def LR():
     l1_LR = l1_LR.fit(x_train, y_train)
     l2_LR = l2_LR.fit(x_train, y_train)
     en_LR = en_LR.fit(x_train, y_train)
-    y_pred = l1_LR.predict(x_test)
-    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
-    y_pred = l2_LR.predict(x_test)
-    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
-    y_pred = en_LR.predict(x_test)
-    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
-    #print_stats(l1_LR)
-    #print_stats(l2_LR)
-    #print_stats(en_LR)
+    print_stats(l1_LR)
+    print_stats(l2_LR)
+    print_stats(en_LR)
 
 
 # naive bayes
 def NB():
     nb = GaussianNB()
     nb = nb.fit(x_train, y_train)
-    y_pred = nb.predict(x_test)
-    print('_____________________________________')
-    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
-    #print_stats(nb)
+    print_stats(nb)
 
 #Decision Tree
 def DT():
@@ -204,13 +193,11 @@ def DT():
     ct_entropy = DecisionTreeClassifier(criterion="entropy")
     ct_gini = ct_gini.fit(x_train, y_train)
     ct_entropy = ct_entropy.fit(x_train, y_train)
-    y_pred = ct_gini.predict(x_test)
-    print('_____________________________________')
-    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
-    y_pred = ct_entropy.predict(x_test)
-    print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
-    #print_stats(ct_entropy)
-    #print_stats(ct_gini)
-LR()
-NB()
-DT()
+    print_stats(ct_entropy)
+    print_stats(ct_gini)
+
+#AdaBoost
+def AB(n):
+    ab = AdaBoostClassifier(n_estimators=n, random_state=0)
+    ab = ab.fit(x_train, y_train)
+    print_stats(ab)
