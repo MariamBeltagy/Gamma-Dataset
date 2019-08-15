@@ -201,3 +201,6 @@ def AB(n):
     ab = AdaBoostClassifier(n_estimators=n, random_state=0)
     ab = ab.fit(x_train, y_train)
     print_stats(ab)
+
+kNearestNeighborsFunction(1,3)
+AB(100)
